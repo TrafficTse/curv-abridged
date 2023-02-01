@@ -3,11 +3,11 @@ use std::{fmt, ops};
 
 use num_traits::Signed;
 
-use super::errors::*;
-use super::traits::*;
-
 use num_bigint::BigInt as BN;
 use num_bigint::Sign;
+
+use super::errors::*;
+use super::traits::*;
 
 mod primes;
 mod ring_algorithms;

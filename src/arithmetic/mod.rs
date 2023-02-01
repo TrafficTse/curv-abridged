@@ -20,20 +20,7 @@ mod samplable;
 mod serde_support;
 pub mod traits;
 
-#[cfg(not(any(feature = "rust-gmp-kzen", feature = "num-bigint")))]
-compile_error!("You need to choose which bigint implementation to use. See crate features.");
-#[cfg(all(feature = "rust-gmp-kzen", feature = "num-bigint"))]
-compile_error!("You can choose only one bigint implementation. See crate features.");
-
-#[cfg(feature = "rust-gmp-kzen")]
-mod big_gmp;
-#[cfg(feature = "rust-gmp-kzen")]
-pub use big_gmp::BigInt;
-
-#[cfg(feature = "num-bigint")]
 mod big_native;
-
-#[cfg(feature = "num-bigint")]
 pub use big_native::BigInt;
 
 pub use errors::{ParseBigIntError, TryFromBigIntError};
@@ -41,48 +28,38 @@ pub use traits::*;
 
 #[cfg(test)]
 mod test {
-    use std::{fmt, ops::*};
+    use std::{fmt, iter, ops::*};
 
     use proptest_derive::Arbitrary;
 
     use super::*;
 
     #[test]
-    fn serializes_deserializes() {
-        use serde_test::{assert_tokens, Configure, Token::*};
+    fn serde() {
+        use serde_test::{assert_tokens, Token::*};
         for bigint in [BigInt::zero(), BigInt::sample(1024)] {
             let bytes = bigint.to_bytes();
-            let tokens = [Bytes(bytes.leak())];
-            assert_tokens(&bigint.compact(), &tokens)
+            let tokens = vec![Bytes(bytes.leak())];
+            assert_tokens(&bigint, &tokens)
         }
     }
 
     #[test]
-    fn deserializes_bigint_represented_as_seq() {
-        use serde_test::{assert_de_tokens, Configure, Token::*};
-
-        let number = BigInt::sample(1024);
-        let bytes = number.to_bytes();
-
-        let mut tokens = vec![Seq {
-            len: Option::Some(bytes.len()),
-        }];
-        tokens.extend(bytes.into_iter().map(U8));
-        tokens.push(SeqEnd);
-
-        assert_de_tokens(&number.compact(), &tokens);
-    }
-
-    #[test]
-    fn serializes_deserializes_in_human_readable_format() {
-        use serde_test::{assert_tokens, Configure, Token::*};
-
-        let number = BigInt::sample(1024);
-        let tokens = [Str(Box::leak(
-            hex::encode(number.to_bytes()).into_boxed_str(),
-        ))];
-
-        assert_tokens(&number.readable(), &tokens);
+    fn deserialize_from_seq() {
+        use serde_test::{
+            assert_de_tokens,
+            Token::{Seq, SeqEnd, U8},
+        };
+        for bigint in [BigInt::zero(), BigInt::sample(1024)] {
+            let bytes = bigint.to_bytes();
+            let tokens = iter::once(Seq {
+                len: Some(bytes.len()),
+            })
+            .chain(bytes.into_iter().map(U8))
+            .chain(iter::once(SeqEnd))
+            .collect::<Vec<_>>();
+            assert_de_tokens(&bigint, &tokens)
+        }
     }
 
     #[test]

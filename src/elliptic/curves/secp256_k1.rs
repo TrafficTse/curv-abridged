@@ -30,8 +30,8 @@ use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
 use zeroize::{Zeroize, Zeroizing};
 
-use crate::arithmetic::*;
 use super::traits::*;
+use crate::arithmetic::*;
 use crate::elliptic::curves::{Curve, DeserializationError, NotOnCurve, PointCoords};
 use crate::BigInt;
 
@@ -144,7 +144,7 @@ impl ECScalar for Secp256k1Scalar {
             .modulus(curve_order)
             .to_bytes_array::<32>()
             .expect("n mod curve_order must be equal or less than 32 bytes");
-        
+
         let bytes = FieldBytes::from(n_reduced);
         let scalar = Scalar::from_repr(bytes);
 

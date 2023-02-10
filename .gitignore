@@ -10,3 +10,5 @@ target/
 **/*.rs.bk
 
 .idea
+
+/src/elliptic/curves/secp256_k1-k256-v0.12.rs

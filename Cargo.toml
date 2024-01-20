@@ -49,6 +49,10 @@ features = ["arithmetic"]
 version = "0.9"
 features = ["ecdsa", "ecdsa-core", "zeroize"]
 
+[dependencies.sm2]
+version = "0.13.3"
+features = ["arithmetic"]
+
 [dev-dependencies]
 serde_test = "1.0"
 paste = "1.0.2"
